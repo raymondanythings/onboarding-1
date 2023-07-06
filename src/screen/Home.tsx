@@ -7,7 +7,7 @@ const Home = () => {
       <h1 className="text-white text-xl font-semibold">HOME</h1>
       <button
         className="text-white p-3 px-5 rounded-md bg-[#1A1A1A]"
-        onClick={() => push("/about")}
+        onClick={() => push("about")}
       >
         about
       </button>

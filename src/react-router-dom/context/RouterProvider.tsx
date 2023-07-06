@@ -1,9 +1,11 @@
 import {
   PropsWithChildren,
   ReactNode,
+  cloneElement,
+  isValidElement,
   useCallback,
   useEffect,
-  useMemo,
+  useRef,
   useState,
 } from "react";
 import { routeContext } from "../context/RouteContext";
@@ -13,17 +15,42 @@ const RouterProvider = ({
 }: PropsWithChildren<{
   locationMap: LocationMap;
 }>) => {
-  const initialPath = useMemo(() => window.location.pathname, []);
-  const [path, setPath] = useState<string[]>([window.location.pathname]);
-  const renderItem = locationMap[window.location.pathname];
-
+  const [history, setHistory] = useState<string[]>([window.location.pathname]);
+  const pathname = window.location.pathname;
+  const initialPath = useRef([window.location.pathname]).current;
+  const renderItem = locationMap[pathname.replace("/", "")];
   const handleListener = useCallback(
     (event: PopStateEvent) => {
       event.preventDefault();
-      setPath(event.state ?? [initialPath]);
+      setHistory(event.state?.history ?? initialPath);
     },
     [initialPath]
   );
+  const push = useCallback(
+    <T,>(location: string, state?: T) => {
+      const newState = {
+        ...(state || {}),
+        history: [...(history || []), location],
+      };
+      window.history.pushState(newState, "", location);
+      window.dispatchEvent(new PopStateEvent("popstate", { state: newState }));
+    },
+    [history]
+  );
+  const replace = useCallback(
+    <T,>(location: string, state?: T) => {
+      const newHistory = [...history];
+      newHistory[newHistory.length - 1] = location;
+      const newState = { ...(state || {}), history: newHistory };
+      window.history.replaceState(newState, "", location);
+      window.dispatchEvent(new PopStateEvent("popstate", { state: newState }));
+    },
+    [history]
+  );
+  const pop = useCallback(() => {
+    window.history.back();
+  }, []);
+
   useEffect(() => {
     window.addEventListener("popstate", handleListener);
     return () => {
@@ -31,13 +58,17 @@ const RouterProvider = ({
     };
   }, [handleListener]);
 
-  if (!renderItem) {
+  if (!isValidElement(renderItem)) {
     return <>Has No Route path.</>;
   }
 
   return (
-    <routeContext.Provider value={{ path, setPath }}>
-      {renderItem}
+    <routeContext.Provider
+      value={{ history, setHistory, pathname, pop, push, replace }}
+    >
+      {cloneElement(renderItem, { pathname } as {
+        pathname: string;
+      })}
     </routeContext.Provider>
   );
 };

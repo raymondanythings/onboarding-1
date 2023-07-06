@@ -7,8 +7,8 @@ import "./index.css";
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <Router>
-      <Route path="/" component={<Home />} />
-      <Route path="/about" component={<About />} />
+      <Route path="" component={<Home />} />
+      <Route path="about" component={<About />} />
     </Router>
   </React.StrictMode>
 );

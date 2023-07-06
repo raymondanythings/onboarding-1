@@ -15,7 +15,6 @@ const Router = ({ children }: PropsWithChildren) => {
     console.error("not found route path");
     return <>not found route path</>;
   }
-
   return <RouterProvider locationMap={currentPathRoute} />;
 };
 
